@@ -57,7 +57,10 @@ excludedCauses <- cause_ids %>%
   filter(cause_id %in% sparse | 
            str_detect(cause_abb, pattern = "maternal") |
            str_detect(cause_abb, pattern = "neonatal") |
-           str_detect(cause_abb, pattern = "inj_")) %>%
+           str_detect(cause_abb, pattern = "inj_") |
+           str_detect(cause_abb, pattern =  "neo_eye_other") | 
+           str_detect(cause_abb, pattern = "resp_pneum_asbest") |
+           str_detect(cause_abb, pattern = "neo_")) %>%
   pull(cause_abb)
 
 #Name the columns and rows
@@ -110,17 +113,19 @@ makeAdjMat <- function(df, minRR){
   #Set diagonal to 0
   diag(df) <- 0
   
+  #Log10
+  df <- ifelse(df != 0, log10(df), 0)
+  
   #Filter edges
   df[df < minRR] <- 0
   
   #Only keep edges that are connected to >=1 node in index
   df[!(rownames(df) %in% indexConditions), !(colnames(df) %in% indexConditions)] <- 0
-  
-  df <- ifelse(df != 0, log10(df), 0)
+
   df
 }
 
-maleListMat <- lapply(maleList, function(x) makeAdjMat(x, 2))
+maleListMat <- lapply(maleList, function(x) makeAdjMat(x, 0.30103))
 femaleListMat <- lapply(femaleList, function(x) makeAdjMat(x, 2))
 
 #Make igraph objects
@@ -153,4 +158,7 @@ femaleNetStats <- data.frame(
 #   mutate(i = rownames(sampMat)) %>%
 #   pivot_longer(-i, names_to = "j", values_to = "value") %>%
 #   view()
-
+netStats <- rbind(maleNetStats %>%
+        mutate(sex = "Male"), 
+      femaleNetStats %>%
+        mutate(sex = "Female"))
