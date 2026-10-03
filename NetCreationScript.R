@@ -114,7 +114,7 @@ makeAdjMat <- function(df, minRR){
   df[df < minRR] <- 0
   
   #Only keep edges that are connected to >=1 node in index
-  df[!(rownames(df) %in% indexConditions) %o% !(colnames(df) %in% indexConditions)] <- 0
+  df[!(rownames(df) %in% indexConditions), !(colnames(df) %in% indexConditions)] <- 0
   
   df <- ifelse(df != 0, log10(df), 0)
   df
